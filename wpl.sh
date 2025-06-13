@@ -1,6 +1,6 @@
 #!/bin/sh
 
-HOST="104.18.213.235"              # IP tujuan ping
+HOST="your_host"              # IP tujuan ping
 DEVICE_IP="192.168.8.1"     # IP modem HiLink / ADB
 ADB_PORT="5555"             # Port default ADB
 FAIL_COUNT=0
