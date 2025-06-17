@@ -7,7 +7,7 @@ FAIL_COUNT=0
 MAX_FAIL=3
 SLEEP_CHECK=3               # Detik antar ping
 SLEEP_RESET=3               # Detik antara CFUN=0 dan CFUN=1
-INTERFACE="eth1"            # Interface untuk ping / interface yang di pakai modem hilink
+INTERFACE="eth2"            # Interface untuk ping / interface yang di pakai modem hilink
 
 log() {
     echo "[$(date '+%Y-%m-%d %H:%M:%S')] $*"
@@ -38,6 +38,7 @@ while true; do
         adb shell atc AT+CFUN=1
         log "Modem diaktifkan kembali."
         sleep $SLEEP_RESET
+        adb shell ping $HOST
         FAIL_COUNT=0
     fi
 
