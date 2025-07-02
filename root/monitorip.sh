@@ -1,12 +1,12 @@
 #!/bin/sh
 
-# Konfigurasi
+# === Konfigurasi ===
 ipmodem="192.168.8.1"
 BOT_TOKEN="youttokenbot"     # Ganti dengan token bot kamu
-CHAT_ID="youtchatid"           # Ganti dengan chat ID kamu
-SLEEP_INTERVAL=60             # Interval pengecekan (detik)
+CHAT_ID="yourchatid"                                           # Ganti dengan chat ID kamu
+SLEEP_INTERVAL=60                                              # Interval pengecekan (detik)
 
-# Lokasi file sementara
+# === Lokasi file sementara ===
 SESSION_FILE="/tmp/hilink.session"
 TOKEN_FILE="/tmp/hilink.token"
 OLD_IP_FILE="/tmp/last_modem_ip"
@@ -67,13 +67,13 @@ get_ip() {
         token=$(cat "$TOKEN_FILE")
     fi
 
-    response=$(curl -s -w "%{http_code}" -o /tmp/modeminfo.xml \
-        "http://$ipmodem/api/device/information" \
+    curl -s "http://$ipmodem/api/device/information" \
         -H "__RequestVerificationToken: $token" \
-        -H "Cookie: $sesi")
+        -H "Cookie: $sesi" > /tmp/modeminfo.xml
 
-    if [ "$response" = "403" ] || [ "$response" = "401" ]; then
-        echo "⚠️  Sesi kadaluarsa, login ulang..."
+    # Cek apakah response berisi error (token/sesi kadaluarsa)
+    if grep -q "<code>125002</code>" /tmp/modeminfo.xml || grep -q "<error>" /tmp/modeminfo.xml; then
+        echo "⚠️  Respon error (token/sesi mungkin kadaluarsa), mencoba login ulang..."
         rm -f "$SESSION_FILE" "$TOKEN_FILE"
         login
         sesi=$(cat "$SESSION_FILE")
@@ -83,12 +83,25 @@ get_ip() {
             -H "Cookie: $sesi" > /tmp/modeminfo.xml
     fi
 
+    # Cek ulang apakah masih error
+    if grep -q "<error>" /tmp/modeminfo.xml; then
+        echo "❌ Gagal mendapatkan IP: respon berisi error"
+        cat /tmp/modeminfo.xml
+        echo ""
+        return 1
+    fi
+
     new_ip=$(sed -n 's:.*<WanIPAddress>\(.*\)</WanIPAddress>.*:\1:p' /tmp/modeminfo.xml)
     echo "$new_ip"
 }
 
 monitor_ip() {
     new_ip=$(get_ip)
+
+    if [ $? -ne 0 ]; then
+        echo "⚠️ Gagal mendapatkan IP WAN, akan mencoba lagi nanti."
+        return
+    fi
 
     if echo "$new_ip" | grep -qE '^([0-9]{1,3}\.){3}[0-9]{1,3}$'; then
         [ -f "$OLD_IP_FILE" ] && old_ip=$(cat "$OLD_IP_FILE") || old_ip="0.0.0.0"
@@ -118,8 +131,8 @@ monitor_ip() {
     fi
 }
 
-# Loop utama
+# === Loop utama ===
 while true; do
     monitor_ip
-    sleep $SLEEP_INTERVAL
+    sleep "$SLEEP_INTERVAL"
 done
