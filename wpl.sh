@@ -1,16 +1,16 @@
 #!/bin/sh
 
-HOST="your_host"              # IP tujuan ping
-DEVICE_IP="192.168.8.1"     # IP modem HiLink / ADB
-ADB_PORT="5555"             # Port default ADB
+HOST="yourhostip"
+DEVICE_IP="192.168.8.1"
+ADB_PORT="5555"
 FAIL_COUNT=0
 MAX_FAIL=3
-SLEEP_CHECK=3               # Detik antar ping
-SLEEP_RESET=3               # Detik antara CFUN=0 dan CFUN=1
-INTERFACE="eth2"            # Interface untuk ping / interface yang di pakai modem hilink
+SLEEP_CHECK=3
+SLEEP_RESET=3
+INTERFACE="eth2"
 
 log() {
-    echo "[$(date '+%Y-%m-%d %H:%M:%S')] $*"
+    echo "[$(date '+%Y-%m-%d %H:%M:%S')] $*" | tee -a /tmp/modem_monitor.log
 }
 
 while true; do
@@ -23,22 +23,26 @@ while true; do
     fi
 
     if [ "$FAIL_COUNT" -ge "$MAX_FAIL" ]; then
-        log "Ping gagal $MAX_FAIL kali berturut-turut, reconnect modem LTE..."
+        log "Ping gagal $MAX_FAIL kali, mencoba reset modem..."
 
-        # Connect ke modem lewat ADB
         log "Mencoba adb connect ke $DEVICE_IP:$ADB_PORT..."
-        adb connect $DEVICE_IP
+        if adb connect $DEVICE_IP | grep -q 'connected'; then
+            log "ADB berhasil terkoneksi."
 
-        # Kirim perintah AT untuk reset modem
-        log "Mengirim AT+CFUN=0..."
-        adb shell atc AT+CFUN=0
-        log "Modem dimatikan sementara..."
+            log "Mengirim AT+CFUN=0..."
+            adb shell atc AT+CFUN=0
 
-        log "Mengirim AT+CFUN=1..."
-        adb shell atc AT+CFUN=1
-        log "Modem diaktifkan kembali."
-        sleep $SLEEP_RESET
-        adb shell ping $HOST
+            log "Tunggu $SLEEP_RESET detik..."
+            sleep "$SLEEP_RESET"
+
+            log "Mengirim AT+CFUN=1..."
+            adb shell atc AT+CFUN=1
+
+            log "Tes ping via modem..."
+            timeout 5 adb shell ping -c 1 -W 2 ava.game.naver.com
+        else
+            log "Gagal connect ADB ke $DEVICE_IP"
+        fi
         FAIL_COUNT=0
     fi
 
