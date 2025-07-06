@@ -2,8 +2,8 @@
 
 # === Konfigurasi ===
 ipmodem="192.168.8.1"
-BOT_TOKEN="youttokenbot"     # Ganti dengan token bot kamu
-CHAT_ID="yourchatid"                                           # Ganti dengan chat ID kamu
+BOT_TOKEN="tokenbot"     # Ganti dengan token bot kamu
+CHAT_ID="chatid"                                           # Ganti dengan chat ID kamu
 SLEEP_INTERVAL=60                                              # Interval pengecekan (detik)
 
 # === Lokasi file sementara ===
