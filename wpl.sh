@@ -39,7 +39,7 @@ while true; do
             adb shell atc AT+CFUN=1
 
             log "Tes ping via modem..."
-            timeout 5 adb shell ping -c 1 -W 2 ava.game.naver.com
+            #timeout 5 adb shell ping -c 1 -W 2 ava.game.naver.com
         else
             log "Gagal connect ADB ke $DEVICE_IP"
         fi
