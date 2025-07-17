@@ -1,12 +1,12 @@
 #!/bin/sh
 
-HOST="yourhostip"
+HOST="yourhost"
 DEVICE_IP="192.168.8.1"
 ADB_PORT="5555"
 FAIL_COUNT=0
 MAX_FAIL=3
-SLEEP_CHECK=3
-SLEEP_RESET=3
+SLEEP_CHECK=1
+SLEEP_RESET=1
 INTERFACE="eth2"
 
 log() {
@@ -30,13 +30,13 @@ while true; do
             log "ADB berhasil terkoneksi."
 
             log "Mengirim AT+CFUN=0..."
-            adb shell atc AT+CFUN=0
+            adb -s $DEVICE_IP:$ADB_PORT shell atc AT+CFUN=0
 
             log "Tunggu $SLEEP_RESET detik..."
             sleep "$SLEEP_RESET"
 
             log "Mengirim AT+CFUN=1..."
-            adb shell atc AT+CFUN=1
+            adb -s $DEVICE_IP:$ADB_PORT shell atc AT+CFUN=1
 
             log "Tes ping via modem..."
             #timeout 5 adb shell ping -c 1 -W 2 ava.game.naver.com
